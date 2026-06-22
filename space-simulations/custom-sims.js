@@ -935,14 +935,10 @@ if (seasonsCanvas) {
   }
   
   function getTilt() {
-    // Sun comes from LEFT (-X). 
-    // Positive tilt means x1 = x0*cos - z0*sin.
-    // North pole is z0=R, x0=0.
-    // x1 = x0*cos(tilt) - z0*sin(tilt)
-    // If tilt is positive, x1 is NEGATIVE for the North Pole (towards Sun at -X -> Summer).
-    if (currentSeason === 'summer') return 23.4 * Math.PI / 180; 
-    if (currentSeason === 'winter') return -23.4 * Math.PI / 180; 
-    return 0; 
+    if (currentSeason === 'summer' || currentSeason === 'winter') {
+      return -23.4 * Math.PI / 180; // Always tilted Right
+    }
+    return 0; // Spring/Autumn
   }
   
   // 3D projection for Earth surface
@@ -971,25 +967,35 @@ if (seasonsCanvas) {
     const tilt = getTilt();
     
     // ----- Draw Sun Rays -----
+    const sunSide = (currentSeason === 'summer') ? 'right' : 'left';
+    
     ctxSeasons.strokeStyle = 'rgba(255, 200, 50, 0.6)';
     ctxSeasons.lineWidth = 3;
     ctxSeasons.beginPath();
     for(let i = -100; i <= 100; i += 30) {
-      // draw rays from left
-      ctxSeasons.moveTo(20, cy + i);
-      // ray ends at the terminator or edge of earth
-      ctxSeasons.lineTo(cx - 30, cy + i);
-      
-      // arrowhead
-      ctxSeasons.moveTo(cx - 40, cy + i - 5);
-      ctxSeasons.lineTo(cx - 30, cy + i);
-      ctxSeasons.lineTo(cx - 40, cy + i + 5);
+      if (sunSide === 'left') {
+        ctxSeasons.moveTo(20, cy + i);
+        ctxSeasons.lineTo(cx - 30, cy + i);
+        ctxSeasons.moveTo(cx - 40, cy + i - 5);
+        ctxSeasons.lineTo(cx - 30, cy + i);
+        ctxSeasons.lineTo(cx - 40, cy + i + 5);
+      } else {
+        ctxSeasons.moveTo(cw - 20, cy + i);
+        ctxSeasons.lineTo(cx + 30, cy + i);
+        ctxSeasons.moveTo(cx + 40, cy + i - 5);
+        ctxSeasons.lineTo(cx + 30, cy + i);
+        ctxSeasons.lineTo(cx + 40, cy + i + 5);
+      }
     }
     ctxSeasons.stroke();
     
     ctxSeasons.fillStyle = '#ffcc00';
     ctxSeasons.font = 'bold 20px sans-serif';
-    ctxSeasons.fillText('太 陽 の 光', 30, 40);
+    if (sunSide === 'left') {
+      ctxSeasons.fillText('太 陽 の 光', 30, 40);
+    } else {
+      ctxSeasons.fillText('太 陽 の 光', cw - 150, 40);
+    }
     
     // ----- Draw Earth Back Half -----
     // To make it look 3D, we can draw the whole sphere, but we will use a gradient
@@ -1008,10 +1014,13 @@ if (seasonsCanvas) {
     // Since tilt is just in XY plane (screen), the terminator is exactly a vertical line passing through (cx, cy)!
     
     ctxSeasons.fillStyle = '#66ccff'; // Day
-    ctxSeasons.fillRect(0, 0, cx, ch);
-    
+    ctxSeasons.fillRect(0, 0, cw, ch);
     ctxSeasons.fillStyle = 'rgba(10, 20, 40, 0.9)'; // Night
-    ctxSeasons.fillRect(cx, 0, cw - cx, ch);
+    if (sunSide === 'left') {
+      ctxSeasons.fillRect(cx, 0, cw - cx, ch);
+    } else {
+      ctxSeasons.fillRect(0, 0, cx, ch);
+    }
     
     // Draw Earth Texture/Continents? Too complex. Just blue oceans.
     
@@ -1049,7 +1058,7 @@ if (seasonsCanvas) {
           if (first) { ctxSeasons.beginPath(); ctxSeasons.moveTo(p.x, p.y); first = false; }
           else {
             // Color based on rx (Day is rx < 0, Night is rx > 0)
-            const isDay = p.rx <= 0;
+            const isDay = (sunSide === 'left') ? (p.rx <= 0) : (p.rx >= 0);
             ctxSeasons.lineTo(p.x, p.y);
             // We stroke segment by segment to change color
             ctxSeasons.strokeStyle = isDay ? (isFront ? '#33ff33' : 'rgba(50,255,50,0.3)') : (isFront ? '#006600' : 'rgba(0,100,0,0.3)');
@@ -1131,7 +1140,7 @@ if (seasonsCanvas) {
     ctxSeasons.beginPath();
     ctxSeasons.arc(pJp.x, pJp.y, isFront ? 6 : 4, 0, Math.PI*2);
     // Color based on rx (Day is rx <= 0)
-    const isJpDay = pJp.rx <= 0;
+    const isJpDay = (sunSide === 'left') ? (pJp.rx <= 0) : (pJp.rx >= 0);
     ctxSeasons.fillStyle = isJpDay ? '#ffff00' : '#444400';
     ctxSeasons.fill();
     ctxSeasons.strokeStyle = '#000';
@@ -1150,37 +1159,23 @@ if (seasonsCanvas) {
     ctxSeasons.fillText('赤道', pEq.x + 10, pEq.y);
     
     // ----- Draw Noon Elevation Angle (南中高度) -----
-    // Only highlight when Japan is near noon (simTime approx 12)
-    // Noon in our simulation is when lonJp = PI. So simTime = 0 is noon?
-    // Wait, lonJp = Math.PI - (simTime / 24) * 2PI.
-    // If simTime = 12, lonJp = 0 (Midnight, +X).
-    // If simTime = 0 or 24, lonJp = PI (-X, Noon).
-    // Let's adjust so simTime = 12 is NOON.
-    // Noon means it's on the extreme left (sun side).
-    // Show noon elevation graphic always, but placed at the noon position
-    const pNoon = projectEarth(latJp, Math.PI, tilt); // Extreme left point
+    const noonLon = (sunSide === 'left') ? Math.PI : 0;
+    const pNoon = projectEarth(latJp, noonLon, tilt);
     
-    // Ground Tangent Vector at noon
-    // At noon (lon=PI), original pos: x0 = -R*cos(lat), y0 = 0, z0 = R*sin(lat).
-    // The "Up" vector (Normal) is exactly the position vector from center!
-    // Normal = (-cos(lat), 0, sin(lat))
-    // Rotated Normal by tilt:
-    const nx = -Math.cos(latJp) * Math.cos(tilt) - Math.sin(latJp) * Math.sin(tilt);
-    const ny = 0;
-    const nz = -Math.cos(latJp) * Math.sin(tilt) + Math.sin(latJp) * Math.cos(tilt);
+    // Normal vector
+    const nx = pNoon.rx / R;
+    const nz = pNoon.rz / R;
+    const normX = nx;
+    const normY = -nz;
     
-    // Ground is perpendicular to Normal.
-    // In the 2D plane (XY screen), the Normal is (nx, -nz).
+    // South tangent
+    const pNoonSouth = projectEarth(latJp - 0.01, noonLon, tilt);
+    const sxRaw = pNoonSouth.rx - pNoon.rx;
+    const syRaw = -(pNoonSouth.rz - pNoon.rz);
+    const sl = Math.hypot(sxRaw, syRaw);
+    const southDir = { x: sxRaw / sl, y: syRaw / sl };
     
-    // South direction is towards Equator.
-    const sx = -nz;
-    const sy = -nx;
-    
-    // Normalize South vector
-    const sl = Math.hypot(sx, sy);
-    const southDir = { x: sx / sl, y: sy / sl };
-    
-    const groundLength = 60;
+    const groundLength = 80;
     const g1x = pNoon.x - southDir.x * groundLength; // North
     const g1y = pNoon.y - southDir.y * groundLength;
     const g2x = pNoon.x + southDir.x * groundLength; // South
@@ -1193,45 +1188,57 @@ if (seasonsCanvas) {
     ctxSeasons.lineWidth = 2;
     ctxSeasons.stroke();
     
-    // Draw "南" label at South end
     ctxSeasons.fillStyle = '#aaaaaa';
-    ctxSeasons.fillText('南', g2x + 5, g2y + 5);
-    ctxSeasons.fillText('北', g1x - 15, g1y - 5);
+    ctxSeasons.fillText('南', g2x + 10, g2y + 5);
+    ctxSeasons.fillText('北', g1x - 25, g1y + 5);
     
-    // Draw Observer (Stick figure)
+    // Observer
     ctxSeasons.beginPath();
     ctxSeasons.moveTo(pNoon.x, pNoon.y);
-    ctxSeasons.lineTo(pNoon.x + nx * 15, pNoon.y - nz * 15); // Normal is (nx, -nz)
+    ctxSeasons.lineTo(pNoon.x + normX * 25, pNoon.y + normY * 25);
     ctxSeasons.strokeStyle = '#ffffff';
-    ctxSeasons.lineWidth = 2;
+    ctxSeasons.lineWidth = 3;
     ctxSeasons.stroke();
     
-    // Sun Ray at noon
     ctxSeasons.beginPath();
-    ctxSeasons.moveTo(pNoon.x - 100, pNoon.y);
+    ctxSeasons.arc(pNoon.x + normX * 28, pNoon.y + normY * 28, 4, 0, Math.PI*2);
+    ctxSeasons.fillStyle = '#ffffff';
+    ctxSeasons.fill();
+    
+    // Sun Ray (dashed)
+    const toSunX = (sunSide === 'left') ? -1 : 1;
+    ctxSeasons.beginPath();
+    ctxSeasons.setLineDash([5, 5]);
+    ctxSeasons.moveTo(pNoon.x + toSunX * 150, pNoon.y);
     ctxSeasons.lineTo(pNoon.x, pNoon.y);
-    ctxSeasons.strokeStyle = 'rgba(255, 200, 50, 0.8)';
+    ctxSeasons.strokeStyle = 'rgba(255, 200, 50, 0.9)';
+    ctxSeasons.lineWidth = 2;
     ctxSeasons.stroke();
+    ctxSeasons.setLineDash([]);
     
-    // Angle Arc
-    // The angle is between South Horizon (sx, sy) and Sun (-X direction => Math.PI)
-    const angleSouth = Math.atan2(sy, sx);
-    const angleSun = Math.PI; // pointing Left
+    // Angle Wedge
+    const angleSouth = Math.atan2(southDir.y, southDir.x);
+    const angleSun = Math.atan2(0, toSunX);
     
     ctxSeasons.beginPath();
-    ctxSeasons.arc(pNoon.x, pNoon.y, 30, Math.min(angleSun, angleSouth), Math.max(angleSun, angleSouth));
-    ctxSeasons.strokeStyle = '#ffaa00';
-    ctxSeasons.lineWidth = 2;
+    ctxSeasons.moveTo(pNoon.x, pNoon.y);
+    ctxSeasons.arc(pNoon.x, pNoon.y, 40, Math.min(angleSun, angleSouth), Math.max(angleSun, angleSouth));
+    ctxSeasons.closePath();
+    ctxSeasons.fillStyle = 'rgba(100, 150, 255, 0.6)';
+    ctxSeasons.fill();
+    ctxSeasons.strokeStyle = '#4488ff';
+    ctxSeasons.lineWidth = 1;
     ctxSeasons.stroke();
     
     ctxSeasons.fillStyle = '#ffaa00';
     ctxSeasons.font = '14px sans-serif';
-    ctxSeasons.fillText('南中高度', pNoon.x - 45, pNoon.y + 25);
+    const textBaseX = (sunSide === 'left') ? (pNoon.x - 70) : (pNoon.x + 20);
+    ctxSeasons.fillText('南中高度', textBaseX, pNoon.y + 25);
     
-    // Calculate noon altitude (90 - lat + declination)
-    const declination = -tilt * 180 / Math.PI; // summer: tilt is negative -> decl is positive
+    // altitude = 90 - lat + declination
+    const declination = (currentSeason === 'summer') ? 23.4 : (currentSeason === 'winter') ? -23.4 : 0;
     const altitude = 90 - 35 + declination;
-    ctxSeasons.fillText(altitude.toFixed(1) + '°', pNoon.x - 45, pNoon.y + 45);
+    ctxSeasons.fillText(altitude.toFixed(1) + '°', textBaseX, pNoon.y + 45);
     
     // UI Updates
     const h = Math.floor(simTime);
