@@ -1455,7 +1455,7 @@ if (eclipsesCanvas) {
     const pE = project3D(0, 0, 0);
     
     // Earth Umbra
-    ctxE.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctxE.fillStyle = 'rgba(50, 50, 60, 0.5)'; // Slightly lighter gray to stand out against black
     ctxE.beginPath();
     const shadowLen = orbitRadius + 50;
     const shadowWidth = earthRadius * 0.8;
@@ -1465,6 +1465,10 @@ if (eclipsesCanvas) {
     ctxE.lineTo(pS.px, pS.py + shadowWidth);
     ctxE.lineTo(pE.px, pE.py + earthRadius);
     ctxE.fill();
+    ctxE.strokeStyle = 'rgba(200, 200, 200, 0.4)';
+    ctxE.setLineDash([5, 5]);
+    ctxE.stroke();
+    ctxE.setLineDash([]);
     
     // Earth
     ctxE.fillStyle = '#4488ff';
@@ -1477,7 +1481,7 @@ if (eclipsesCanvas) {
     ctxE.fill();
     
     // Moon Umbra
-    ctxE.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctxE.fillStyle = 'rgba(50, 50, 60, 0.6)';
     ctxE.beginPath();
     const pMoonEnd = project3D(moonX + orbitRadius, moonY, moonZ);
     ctxE.moveTo(pMoon.px, pMoon.py - moonRadius);
@@ -1485,6 +1489,10 @@ if (eclipsesCanvas) {
     ctxE.lineTo(pMoonEnd.px, pMoonEnd.py + moonRadius * 0.8);
     ctxE.lineTo(pMoon.px, pMoon.py + moonRadius);
     ctxE.fill();
+    ctxE.strokeStyle = 'rgba(200, 200, 200, 0.4)';
+    ctxE.setLineDash([3, 3]);
+    ctxE.stroke();
+    ctxE.setLineDash([]);
     
     // Moon
     ctxE.fillStyle = '#dddddd';
