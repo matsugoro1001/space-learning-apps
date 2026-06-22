@@ -1568,7 +1568,7 @@ if (eclipsesCanvas) {
         ctxV.shadowBlur = 0;
       }
       
-      // Sun
+      // Sun silhouette
       ctxV.fillStyle = '#ffcc00';
       ctxV.fill();
       
@@ -1578,6 +1578,20 @@ if (eclipsesCanvas) {
       ctxV.arc(vcx - moonY * viewScale, vcy - moonZ * viewScale, moonApparentRadius, 0, Math.PI*2);
       ctxV.fill();
       ctxV.restore();
+      
+      // Labels for Sun and Moon (during eclipse)
+      ctxV.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctxV.font = 'bold 12px sans-serif';
+      ctxV.textAlign = 'center';
+      ctxV.fillText('太陽', vcx, vcy - sunApparentRadius - 8);
+      
+      if (eclipseType !== 'none') {
+        // Drop shadow for text readability
+        ctxV.shadowColor = 'rgba(0,0,0,0.8)';
+        ctxV.shadowBlur = 4;
+        ctxV.fillText('月', vcx - moonY * viewScale, vcy - moonZ * viewScale + moonApparentRadius + 15);
+        ctxV.shadowBlur = 0;
+      }
       
       // If the moon is not eclipsing, show a dashed outline to explain where it is
       if (eclipseType === 'none') {
@@ -1594,7 +1608,7 @@ if (eclipsesCanvas) {
         ctxV.fillText('新月（見えない）', vcx - moonY * viewScale, vcy - moonZ * viewScale + 4);
       }
     } else {
-      // Nighttime (Looking at Earth Shadow)
+      // Earth Shadow
       ctxV.fillStyle = 'rgba(0,0,0,0.6)';
       ctxV.beginPath();
       ctxV.arc(vcx, vcy, shadowApparentRadius, 0, Math.PI*2);
@@ -1604,12 +1618,25 @@ if (eclipsesCanvas) {
       ctxV.stroke();
       ctxV.setLineDash([]);
       
+      // Earth Shadow Label
+      ctxV.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctxV.font = 'bold 12px sans-serif';
+      ctxV.textAlign = 'center';
+      ctxV.fillText('地球の影', vcx, vcy - shadowApparentRadius - 8);
+      
       // Moon
       ctxV.fillStyle = eclipseType.startsWith('lunar') ? '#aa3322' : '#eeeeee';
       if (eclipseType === 'lunar-partial') ctxV.fillStyle = '#ddaa88';
       ctxV.beginPath();
       ctxV.arc(vcx + moonY * viewScale, vcy - moonZ * viewScale, moonApparentRadius, 0, Math.PI*2);
       ctxV.fill();
+      
+      // Moon Label
+      ctxV.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctxV.shadowColor = 'rgba(0,0,0,0.8)';
+      ctxV.shadowBlur = 4;
+      ctxV.fillText('月', vcx + moonY * viewScale, vcy - moonZ * viewScale + moonApparentRadius + 15);
+      ctxV.shadowBlur = 0;
     }
   }
   
