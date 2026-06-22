@@ -1235,11 +1235,11 @@ if (seasonsCanvas) {
     ctxSeasons.fillStyle = '#dddddd';
     let formulaStr = '';
     if (currentSeason === 'summer') {
-      formulaStr = '(90° - 緯度 + 23.4°)';
+      formulaStr = '(90° - 35° + 23.4°)';
     } else if (currentSeason === 'winter') {
-      formulaStr = '(90° - 緯度 - 23.4°)';
+      formulaStr = '(90° - 35° - 23.4°)';
     } else {
-      formulaStr = '(90° - 緯度)';
+      formulaStr = '(90° - 35°)';
     }
     ctxSeasons.fillText(formulaStr, textBaseX, pNoon.y + 55);
     
@@ -1266,6 +1266,11 @@ if (seasonsCanvas) {
     ctxSeasons.fillText('■ 昼の長さ（明るい緑）', 20, ch - 45);
     ctxSeasons.fillStyle = '#006600';
     ctxSeasons.fillText('■ 夜の長さ（暗い緑）', 180, ch - 45);
+    
+    // Explicitly show Latitude
+    ctxSeasons.fillStyle = '#ffffff';
+    ctxSeasons.font = 'bold 16px sans-serif';
+    ctxSeasons.fillText('観測地点: 北緯35° (日本)', 20, 30);
 
   }
   
