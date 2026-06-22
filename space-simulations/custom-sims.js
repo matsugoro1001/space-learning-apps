@@ -1042,7 +1042,7 @@ if (seasonsCanvas) {
           if (first) { ctxSeasons.beginPath(); ctxSeasons.moveTo(p.x, p.y); first = false; }
           else {
             // Color based on rx (Day is rx < 0, Night is rx > 0)
-            const isDay = (sunSide === 'left') ? (p.rx <= 0) : (p.rx >= 0);
+            const isDay = p.rx <= 0;
             ctxSeasons.lineTo(p.x, p.y);
             // We stroke segment by segment to change color
             ctxSeasons.strokeStyle = isDay ? (isFront ? '#33ff33' : 'rgba(50,255,50,0.3)') : (isFront ? '#006600' : 'rgba(0,100,0,0.3)');
@@ -1124,7 +1124,7 @@ if (seasonsCanvas) {
     ctxSeasons.beginPath();
     ctxSeasons.arc(pJp.x, pJp.y, isFront ? 6 : 4, 0, Math.PI*2);
     // Color based on rx (Day is rx <= 0)
-    const isJpDay = (sunSide === 'left') ? (pJp.rx <= 0) : (pJp.rx >= 0);
+    const isJpDay = pJp.rx <= 0;
     ctxSeasons.fillStyle = isJpDay ? '#ffff00' : '#444400';
     ctxSeasons.fill();
     ctxSeasons.strokeStyle = '#000';
