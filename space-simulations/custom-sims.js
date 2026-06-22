@@ -1287,15 +1287,19 @@ if (eclipsesCanvas) {
       if (state === 'solar') {
         targetEarthAngle = 0;
         targetMoonAngle = 180;
+        targetCamPitch = 30; // Diagonal view to see overlap clearly
       } else if (state === 'lunar') {
         targetEarthAngle = 0;
-        targetMoonAngle = 0; // or 360 depending on rotation
+        targetMoonAngle = 0; 
+        targetCamPitch = 30;
       } else if (state === 'normal-new') {
         targetEarthAngle = 90;
         targetMoonAngle = 180;
+        targetCamPitch = 85; // Drop down to side view to see vertical gap
       } else if (state === 'normal-full') {
         targetEarthAngle = 90;
-        targetMoonAngle = 360; // So it rotates forward from 180
+        targetMoonAngle = 360; 
+        targetCamPitch = 85;
       }
       
       // Ensure smooth shortest-path rotation or nice wrap around
@@ -1310,6 +1314,57 @@ if (eclipsesCanvas) {
     if (b.dataset.state === 'normal-new') b.style.opacity = '1.0';
     else b.style.opacity = '0.5';
   });
+  
+  let currentCamPitch = 30; // 30 degrees from top-down
+  let targetCamPitch = 30;
+  
+  let isDraggingEclipses = false;
+  let lastMouseYEclipses = 0;
+  
+  eclipsesCanvas.addEventListener('mousedown', e => {
+    isDraggingEclipses = true;
+    lastMouseYEclipses = e.clientY;
+    eclipsesCanvas.style.cursor = 'grabbing';
+  });
+  
+  window.addEventListener('mouseup', () => {
+    isDraggingEclipses = false;
+    if (eclipsesCanvas) eclipsesCanvas.style.cursor = 'grab';
+  });
+  
+  window.addEventListener('mousemove', e => {
+    if (isDraggingEclipses) {
+      const dy = e.clientY - lastMouseYEclipses;
+      lastMouseYEclipses = e.clientY;
+      targetCamPitch -= dy * 0.5;
+      // restrict between slightly top-down and almost full side view
+      if (targetCamPitch < 0) targetCamPitch = 0;
+      if (targetCamPitch > 88) targetCamPitch = 88;
+      // manually dragging overrides auto-animation, so snap current to target
+      currentCamPitch = targetCamPitch;
+    }
+  });
+  
+  // Also support touch for mobile
+  eclipsesCanvas.addEventListener('touchstart', e => {
+    isDraggingEclipses = true;
+    lastMouseYEclipses = e.touches[0].clientY;
+  }, {passive: true});
+  
+  window.addEventListener('touchend', () => {
+    isDraggingEclipses = false;
+  });
+  
+  window.addEventListener('touchmove', e => {
+    if (isDraggingEclipses) {
+      const dy = e.touches[0].clientY - lastMouseYEclipses;
+      lastMouseYEclipses = e.touches[0].clientY;
+      targetCamPitch -= dy * 0.5;
+      if (targetCamPitch < 0) targetCamPitch = 0;
+      if (targetCamPitch > 88) targetCamPitch = 88;
+      currentCamPitch = targetCamPitch;
+    }
+  }, {passive: true});
   
   const cw = eclipsesCanvas.width;
   const ch = eclipsesCanvas.height;
@@ -1333,23 +1388,27 @@ if (eclipsesCanvas) {
     ctxE.clearRect(0, 0, cw, ch);
     ctxV.clearRect(0, 0, viewCanvas.width, viewCanvas.height);
     
-    const viewTilt = 20 * Math.PI / 180; 
+    const pitch = currentCamPitch * Math.PI / 180;
+    
+    function project3D(x, y, z) {
+      const yp = y * Math.cos(pitch) - z * Math.sin(pitch);
+      const zp = y * Math.sin(pitch) + z * Math.cos(pitch);
+      return { px: cx + x, py: cy - yp, pz: zp };
+    }
     
     // Sun rays from the left
     ctxE.strokeStyle = 'rgba(255, 200, 50, 0.4)';
     ctxE.lineWidth = 2;
     ctxE.beginPath();
-    for(let i = -100; i <= 100; i += 20) {
-      ctxE.moveTo(0, cy + i * Math.cos(viewTilt));
-      ctxE.lineTo(cx - 30, cy + i * Math.cos(viewTilt));
+    for(let y = -100; y <= 100; y += 20) {
+      for(let z = -100; z <= 100; z += 50) {
+         let p1 = project3D(-400, y, z);
+         let p2 = project3D(-30, y, z);
+         ctxE.moveTo(p1.px, p1.py);
+         ctxE.lineTo(p2.px, p2.py);
+      }
     }
     ctxE.stroke();
-    
-    function project3D(x, y, z) {
-      const yp = y * Math.cos(viewTilt) - z * Math.sin(viewTilt);
-      const zp = y * Math.sin(viewTilt) + z * Math.cos(viewTilt);
-      return { px: cx + x, py: cy - yp, pz: zp };
-    }
     
     // Moon orbit path
     ctxE.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -1400,11 +1459,10 @@ if (eclipsesCanvas) {
     ctxE.beginPath();
     const shadowLen = orbitRadius + 50;
     const shadowWidth = earthRadius * 0.8;
-    const pS1 = project3D(shadowLen, -shadowWidth, 0);
-    const pS2 = project3D(shadowLen, shadowWidth, 0);
+    const pS = project3D(shadowLen, 0, 0);
     ctxE.moveTo(pE.px, pE.py - earthRadius);
-    ctxE.lineTo(pS1.px, pS1.py);
-    ctxE.lineTo(pS2.px, pS2.py);
+    ctxE.lineTo(pS.px, pS.py - shadowWidth);
+    ctxE.lineTo(pS.px, pS.py + shadowWidth);
     ctxE.lineTo(pE.px, pE.py + earthRadius);
     ctxE.fill();
     
@@ -1421,11 +1479,10 @@ if (eclipsesCanvas) {
     // Moon Umbra
     ctxE.fillStyle = 'rgba(0, 0, 0, 0.8)';
     ctxE.beginPath();
-    const mS1 = project3D(moonX + orbitRadius, moonY - moonRadius, moonZ);
-    const mS2 = project3D(moonX + orbitRadius, moonY + moonRadius, moonZ);
+    const pMoonEnd = project3D(moonX + orbitRadius, moonY, moonZ);
     ctxE.moveTo(pMoon.px, pMoon.py - moonRadius);
-    ctxE.lineTo(mS1.px, mS1.py);
-    ctxE.lineTo(mS2.px, mS2.py);
+    ctxE.lineTo(pMoonEnd.px, pMoonEnd.py - moonRadius * 0.8);
+    ctxE.lineTo(pMoonEnd.px, pMoonEnd.py + moonRadius * 0.8);
     ctxE.lineTo(pMoon.px, pMoon.py + moonRadius);
     ctxE.fill();
     
