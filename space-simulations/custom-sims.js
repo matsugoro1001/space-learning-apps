@@ -1171,18 +1171,20 @@ if (seasonsCanvas) {
     
     // Ground is perpendicular to Normal.
     // In the 2D plane (XY screen), the Normal is (nx, -nz).
-    // So the ground tangent is (nz, nx).
-    const groundDir = { x: nz, y: nx };
-    // Normalize
-    const gl = Math.hypot(groundDir.x, groundDir.y);
-    groundDir.x /= gl;
-    groundDir.y /= gl;
+    
+    // South direction is towards Equator.
+    const sx = -nz;
+    const sy = -nx;
+    
+    // Normalize South vector
+    const sl = Math.hypot(sx, sy);
+    const southDir = { x: sx / sl, y: sy / sl };
     
     const groundLength = 60;
-    const g1x = pNoon.x - groundDir.x * groundLength;
-    const g1y = pNoon.y - groundDir.y * groundLength;
-    const g2x = pNoon.x + groundDir.x * groundLength;
-    const g2y = pNoon.y + groundDir.y * groundLength;
+    const g1x = pNoon.x - southDir.x * groundLength; // North
+    const g1y = pNoon.y - southDir.y * groundLength;
+    const g2x = pNoon.x + southDir.x * groundLength; // South
+    const g2y = pNoon.y + southDir.y * groundLength;
     
     ctxSeasons.beginPath();
     ctxSeasons.moveTo(g1x, g1y);
@@ -1190,11 +1192,21 @@ if (seasonsCanvas) {
     ctxSeasons.strokeStyle = '#aaaaaa';
     ctxSeasons.lineWidth = 2;
     ctxSeasons.stroke();
+    
+    // Draw "南" label at South end
     ctxSeasons.fillStyle = '#aaaaaa';
-    ctxSeasons.fillText('地面', g2x + 5, g2y + 5);
+    ctxSeasons.fillText('南', g2x + 5, g2y + 5);
+    ctxSeasons.fillText('北', g1x - 15, g1y - 5);
+    
+    // Draw Observer (Stick figure)
+    ctxSeasons.beginPath();
+    ctxSeasons.moveTo(pNoon.x, pNoon.y);
+    ctxSeasons.lineTo(pNoon.x + nx * 15, pNoon.y - nz * 15); // Normal is (nx, -nz)
+    ctxSeasons.strokeStyle = '#ffffff';
+    ctxSeasons.lineWidth = 2;
+    ctxSeasons.stroke();
     
     // Sun Ray at noon
-    // Sun ray is horizontal (coming from left).
     ctxSeasons.beginPath();
     ctxSeasons.moveTo(pNoon.x - 100, pNoon.y);
     ctxSeasons.lineTo(pNoon.x, pNoon.y);
@@ -1202,26 +1214,14 @@ if (seasonsCanvas) {
     ctxSeasons.stroke();
     
     // Angle Arc
-    // We want to draw the angle between ground and horizontal ray.
-    // The ray comes from left (-X direction, angle PI).
-    // But relative to the point pNoon, the ray comes from the left.
-    // So the angle is between Ground and the Horizontal line towards the left.
-    // Let's compute angle
-    // ground vector pointing "South" (away from North pole)
-    // normal is up. Ground vector pointing south is (nz, nx) if nx is negative?
-    // Let's just use atan2.
-    // Horizontal sun ray vector pointing RIGHT (into the point): (1, 0)
-    // The ground tangent pointing "south" is (nz, nx)
-    let angleSun = 0; // standard angle for (1,0) is 0
-    let angleGround = Math.atan2(groundDir.y, groundDir.x);
-    // If the ground points left, we reverse it
-    if (groundDir.x < 0) {
-      angleGround = Math.atan2(-groundDir.y, -groundDir.x);
-    }
+    // The angle is between South Horizon (sx, sy) and Sun (-X direction => Math.PI)
+    const angleSouth = Math.atan2(sy, sx);
+    const angleSun = Math.PI; // pointing Left
     
     ctxSeasons.beginPath();
-    ctxSeasons.arc(pNoon.x, pNoon.y, 30, Math.min(0, angleGround), Math.max(0, angleGround));
+    ctxSeasons.arc(pNoon.x, pNoon.y, 30, Math.min(angleSun, angleSouth), Math.max(angleSun, angleSouth));
     ctxSeasons.strokeStyle = '#ffaa00';
+    ctxSeasons.lineWidth = 2;
     ctxSeasons.stroke();
     
     ctxSeasons.fillStyle = '#ffaa00';
