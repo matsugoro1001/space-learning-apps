@@ -1508,17 +1508,17 @@ if (eclipsesCanvas) {
     let status = "日食も月食も起きていない";
     let statusColor = "#aaaaaa";
     let eclipseType = 'none';
-    
-    const sunApparentRadius = 40;
-    const moonApparentRadius = 40;
-    const shadowApparentRadius = 90;
-    const viewScale = 3;
+    // Scale accurately to match 3D proportions
+    const shadowApparentRadius = 32; 
+    const viewScale = shadowApparentRadius / 16; // 2.0
+    const moonApparentRadius = moonRadius * viewScale; // 12
+    const sunApparentRadius = 13;
     
     let dist = Math.sqrt(moonY*moonY + moonZ*moonZ);
     let viewDist = dist * viewScale;
     
-    if (moonX < -orbitRadius * 0.9) {
-      if (viewDist < 10) {
+    if (moonX < -orbitRadius * 0.8) {
+      if (viewDist < 2) {
         status = "皆既日食！";
         statusColor = "#ff4444";
         eclipseType = 'solar-total';
@@ -1527,7 +1527,7 @@ if (eclipsesCanvas) {
         statusColor = "#ffaa00";
         eclipseType = 'solar-partial';
       }
-    } else if (moonX > orbitRadius * 0.9) {
+    } else if (moonX > orbitRadius * 0.8) {
       if (viewDist < shadowApparentRadius - moonApparentRadius) {
         status = "皆既月食！";
         statusColor = "#ff4444";
@@ -1551,22 +1551,59 @@ if (eclipsesCanvas) {
     ctxV.fillRect(0, 0, viewCanvas.width, viewCanvas.height);
     
     if (moonX < 0) {
-      // Sun
-      ctxV.fillStyle = '#ffcc00';
+      // Daytime (Looking at Sun)
+      ctxV.save();
       ctxV.beginPath();
       ctxV.arc(vcx, vcy, sunApparentRadius, 0, Math.PI*2);
+      ctxV.clip(); // Only show moon inside the sun (realistic glare/cutout)
+      
+      // If total eclipse, draw a corona effect before drawing the sun
+      if (eclipseType === 'solar-total') {
+        ctxV.shadowBlur = 15;
+        ctxV.shadowColor = '#fff';
+        ctxV.fillStyle = '#fff';
+        ctxV.beginPath();
+        ctxV.arc(vcx, vcy, sunApparentRadius + 2, 0, Math.PI*2);
+        ctxV.fill();
+        ctxV.shadowBlur = 0;
+      }
+      
+      // Sun
+      ctxV.fillStyle = '#ffcc00';
       ctxV.fill();
-      // Moon
+      
+      // Moon silhouette
       ctxV.fillStyle = '#111';
       ctxV.beginPath();
       ctxV.arc(vcx - moonY * viewScale, vcy - moonZ * viewScale, moonApparentRadius, 0, Math.PI*2);
       ctxV.fill();
+      ctxV.restore();
+      
+      // If the moon is not eclipsing, show a dashed outline to explain where it is
+      if (eclipseType === 'none') {
+        ctxV.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctxV.setLineDash([3, 3]);
+        ctxV.beginPath();
+        ctxV.arc(vcx - moonY * viewScale, vcy - moonZ * viewScale, moonApparentRadius, 0, Math.PI*2);
+        ctxV.stroke();
+        ctxV.setLineDash([]);
+        
+        ctxV.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctxV.font = '11px sans-serif';
+        ctxV.textAlign = 'center';
+        ctxV.fillText('新月（見えない）', vcx - moonY * viewScale, vcy - moonZ * viewScale + 4);
+      }
     } else {
-      // Earth Shadow
+      // Nighttime (Looking at Earth Shadow)
       ctxV.fillStyle = 'rgba(0,0,0,0.6)';
       ctxV.beginPath();
       ctxV.arc(vcx, vcy, shadowApparentRadius, 0, Math.PI*2);
       ctxV.fill();
+      ctxV.strokeStyle = 'rgba(200, 200, 200, 0.4)';
+      ctxV.setLineDash([4, 4]);
+      ctxV.stroke();
+      ctxV.setLineDash([]);
+      
       // Moon
       ctxV.fillStyle = eclipseType.startsWith('lunar') ? '#aa3322' : '#eeeeee';
       if (eclipseType === 'lunar-partial') ctxV.fillStyle = '#ddaa88';
