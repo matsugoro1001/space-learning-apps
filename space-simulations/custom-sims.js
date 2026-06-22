@@ -1552,6 +1552,19 @@ if (eclipsesCanvas) {
     
     if (moonX < 0) {
       // Daytime (Looking at Sun)
+      
+      // Draw sun rays to make it clearly look like a sun
+      if (eclipseType !== 'solar-total') {
+        ctxV.strokeStyle = 'rgba(255, 204, 0, 0.8)';
+        ctxV.lineWidth = 2;
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+          ctxV.beginPath();
+          ctxV.moveTo(vcx + Math.cos(a) * (sunApparentRadius + 2), vcy + Math.sin(a) * (sunApparentRadius + 2));
+          ctxV.lineTo(vcx + Math.cos(a) * (sunApparentRadius + 8), vcy + Math.sin(a) * (sunApparentRadius + 8));
+          ctxV.stroke();
+        }
+      }
+      
       ctxV.save();
       ctxV.beginPath();
       ctxV.arc(vcx, vcy, sunApparentRadius, 0, Math.PI*2);
@@ -1583,15 +1596,16 @@ if (eclipsesCanvas) {
       ctxV.fillStyle = 'rgba(255, 255, 255, 0.9)';
       ctxV.font = 'bold 12px sans-serif';
       ctxV.textAlign = 'center';
-      ctxV.fillText('太陽', vcx, vcy - sunApparentRadius - 8);
+      
+      // Drop shadow for text readability
+      ctxV.shadowColor = 'rgba(0,0,0,0.8)';
+      ctxV.shadowBlur = 4;
+      ctxV.fillText('太陽', vcx, vcy - sunApparentRadius - 12);
       
       if (eclipseType !== 'none') {
-        // Drop shadow for text readability
-        ctxV.shadowColor = 'rgba(0,0,0,0.8)';
-        ctxV.shadowBlur = 4;
         ctxV.fillText('月', vcx - moonY * viewScale, vcy - moonZ * viewScale + moonApparentRadius + 15);
-        ctxV.shadowBlur = 0;
       }
+      ctxV.shadowBlur = 0;
       
       // If the moon is not eclipsing, show a dashed outline to explain where it is
       if (eclipseType === 'none') {
