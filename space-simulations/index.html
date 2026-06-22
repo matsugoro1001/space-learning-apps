@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宇宙のシミュレーション</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="twinkling"></div>
+
+  <div class="app-container">
+    <aside class="sidebar glass-panel">
+      <h2>🚀 メニュー</h2>
+      <nav id="nav-menu">
+        <button class="nav-btn active" data-target="sim-sun-anatomy">1. 太陽のすがた</button>
+        <button class="nav-btn" data-target="sim-sun-motion">2. 太陽の一日の動き</button>
+        <button class="nav-btn" data-target="sim-stars-motion">3. 星の一日の動き</button>
+        <button class="nav-btn" data-target="sim-earth-orbit">4. 地球の公転と見える星座</button>
+        <button class="nav-btn" data-target="sim-seasons">5. 地軸の傾きと季節の変化</button>
+        <button class="nav-btn" data-target="sim-moon-phases">6. 月の満ち欠け</button>
+        <button class="nav-btn" data-target="sim-venus-phases">7. 金星の満ち欠け</button>
+        <button class="nav-btn" data-target="sim-eclipses">8. 日食・月食のしくみ</button>
+        <button class="nav-btn" data-target="sim-solar-system">9. 太陽系の天体比較</button>
+      </nav>
+      <div class="back-link">
+        <a href="../space-books-app/index.html" class="btn-secondary">📚 本を探すアプリに戻る</a>
+      </div>
+    </aside>
+
+    <main class="content-area glass-panel">
+      
+      <!-- 1. 太陽のすがた -->
+      <section id="sim-sun-anatomy" class="sim-section active">
+        <header>
+          <h2>☀️ 太陽のすがた</h2>
+          <p>太陽の断面図です。各部分の名称をタップしてみましょう！</p>
+        </header>
+        <div class="sim-container" id="sun-anatomy-container">
+          <!-- JSでレンダリング -->
+        </div>
+      </section>
+
+      <!-- 6. 月の満ち欠け -->
+      <section id="sim-moon-phases" class="sim-section">
+        <header>
+          <h2>🌕 月の満ち欠けシミュレーション</h2>
+          <p>スライダーを動かして、太陽・地球・月の位置関係と、地球から見た月の形を確認しよう！</p>
+        </header>
+        <div class="sim-container" id="moon-phases-container">
+          <div class="canvas-wrapper">
+            <!-- 宇宙の全体図 (Top-down view) -->
+            <canvas id="moon-orbit-canvas" width="400" height="400"></canvas>
+            
+            <!-- 地球から見た月の見え方 -->
+            <div class="earth-view">
+              <h3>🌍 地球から見た月</h3>
+              <canvas id="moon-view-canvas" width="200" height="200"></canvas>
+              <p id="moon-phase-name" class="phase-name">新月</p>
+            </div>
+          </div>
+          
+          <div class="controls">
+            <label for="time-slider">時間（日にちを進める）:</label>
+            <input type="range" id="time-slider" min="0" max="29.53" step="0.1" value="0">
+            <span id="day-display">0日経過</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 太陽の一日の動き -->
+      <section id="sim-sun-motion" class="sim-section">
+        <header>
+          <h2>🌅 太陽の一日の動き</h2>
+          <p>季節による太陽の通り道（夏至、春分・秋分、冬至）の違いを確認しましょう。（※日本での見え方）</p>
+        </header>
+        <div class="sim-container" id="sun-motion-container">
+          <div class="direction-tabs">
+            <button class="season-btn active" data-season="summer">夏至</button>
+            <button class="season-btn" data-season="spring-autumn">春分・秋分</button>
+            <button class="season-btn" data-season="winter">冬至</button>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="sun-motion-canvas" width="600" height="400"></canvas>
+          </div>
+          <div class="controls" style="display: flex; align-items: center; gap: 10px;">
+            <button id="sun-play-btn" style="padding: 5px 10px; cursor: pointer; background: var(--accent-color); color: white; border: none; border-radius: 4px;">⏸ 一時停止</button>
+            <label for="sun-time-slider">時間:</label>
+            <input type="range" id="sun-time-slider" min="0" max="24" step="0.1" value="12" style="flex: 1;">
+            <span id="sun-time-display">12:00</span>
+            <span id="sun-status" style="margin-left: 15px; font-weight: bold; color: #ffaa00; min-width: 80px;"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 星の一日の動き -->
+      <section id="sim-stars-motion" class="sim-section">
+        <header>
+          <h2>✨ 星の一日の動き</h2>
+          <p>宇宙から見た天球全体の動きと、地上から見た東西南北の空の動きを見比べよう！上の天球はマウスで自由に動かせます。</p>
+        </header>
+        <div class="sim-container" id="stars-motion-container" style="flex-direction: column; align-items: center; gap: 20px;">
+          
+          <div class="canvas-wrapper" style="width: 100%; max-width: 600px; position: relative;">
+            <canvas id="stars-space-canvas" width="600" height="400" style="width:100%; height:auto;"></canvas>
+            <div style="position: absolute; top: 10px; left: 10px; color: white; font-weight: bold; text-shadow: 1px 1px 2px black;">宇宙からの視点（マウスで回転）</div>
+          </div>
+
+          <!-- Layout: East, South, West (Row 1), North (Row 2) -->
+          <div class="sky-grid-top" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; max-width: 900px;">
+            <div class="canvas-wrapper" style="position: relative;">
+              <canvas id="stars-east-canvas" width="300" height="300" style="width:100%; height:auto; display:block;"></canvas>
+              <div style="position: absolute; bottom: 10px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; font-size: 18px;">東の空</div>
+            </div>
+            <div class="canvas-wrapper" style="position: relative;">
+              <canvas id="stars-south-canvas" width="300" height="300" style="width:100%; height:auto; display:block;"></canvas>
+              <div style="position: absolute; bottom: 10px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; font-size: 18px;">南の空</div>
+            </div>
+            <div class="canvas-wrapper" style="position: relative;">
+              <canvas id="stars-west-canvas" width="300" height="300" style="width:100%; height:auto; display:block;"></canvas>
+              <div style="position: absolute; bottom: 10px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; font-size: 18px;">西の空</div>
+            </div>
+          </div>
+          <div class="sky-grid-bottom" style="display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; max-width: 300px; margin-top: 10px;">
+            <div class="canvas-wrapper" style="position: relative;">
+              <canvas id="stars-north-canvas" width="300" height="300" style="width:100%; height:auto; display:block;"></canvas>
+              <div style="position: absolute; bottom: 10px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; font-size: 18px;">北の空</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 4. 地球の公転と見える星座 -->
+      <section id="sim-earth-orbit" class="sim-section">
+        <header>
+          <h2>🌍 地球の公転と見える星座（黄道十二星座）</h2>
+          <p>地球が公転することで、真夜中に見える星座（ハイライト表示）が変わります。</p>
+          <div class="glass-panel" style="padding: 1rem; margin-top: 10px; background: rgba(255, 200, 0, 0.1); border-left: 4px solid #ffcc00; text-align: left;">
+            <strong style="color:#ffcc00;">💡 黄道（こうどう）とは？</strong><br>
+            <span style="font-size: 0.9em; line-height: 1.5; display: inline-block; margin-top: 5px;">地球から見たときの、天球上の太陽の通り道のことです。この黄道の近くにある12の星座を「黄道十二星座」と呼びます。地球から見て太陽と同じ方向にある星座は、昼間の空にあるため見ることができません。</span>
+          </div>
+        </header>
+        <div class="sim-container" id="earth-orbit-container">
+          <div class="canvas-wrapper">
+            <canvas id="earth-orbit-canvas" width="500" height="500"></canvas>
+          </div>
+          <div class="controls">
+            <label for="month-slider">季節（月を進める）:</label>
+            <input type="range" id="month-slider" min="1" max="12" step="1" value="8">
+            <span id="month-display">8月（夏）</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. 地軸の傾きと季節の変化 -->
+      <section id="sim-seasons" class="sim-section">
+        <header>
+          <h2>☀️ 地軸の傾きと季節の変化</h2>
+          <p>地軸（23.4度）の傾きによって、夏は太陽の光がまっすぐ当たり、冬は斜めから当たることを確認しよう。</p>
+        </header>
+        <div class="sim-container" id="seasons-container">
+          <div class="direction-tabs">
+            <button class="season-view-btn active" data-season="summer">夏至（日本）</button>
+            <button class="season-view-btn" data-season="spring-autumn">春分・秋分（日本）</button>
+            <button class="season-view-btn" data-season="winter">冬至（日本）</button>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="seasons-canvas" width="600" height="400"></canvas>
+          </div>
+          <div class="controls" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+            <button id="seasons-play-btn" style="padding: 5px 10px; cursor: pointer; background: var(--accent-color); color: white; border: none; border-radius: 4px;">⏸ 一時停止</button>
+            <label for="seasons-time-slider">地球の自転:</label>
+            <input type="range" id="seasons-time-slider" min="0" max="24" step="0.1" value="12" style="flex: 1;">
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. 金星の満ち欠け -->
+      <section id="sim-venus-phases" class="sim-section">
+        <header>
+          <h2>🔭 金星の満ち欠けと見え方</h2>
+          <p>金星は地球よりも内側を公転している（内惑星）ため、月のように満ち欠けし、見かけの大きさも変わります。</p>
+        </header>
+        <div class="sim-container iframe-container">
+          <iframe src="https://www.geogebra.org/material/iframe/id/jESpPDr2/width/1000/height/700/border/888888/sfsb/true/smb/false/stb/false/stbh/false/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/false/ctl/false" frameborder="0" allowfullscreen></iframe>
+        </div>
+      </section>
+
+      <!-- 8. 日食・月食のしくみ -->
+      <section id="sim-eclipses" class="sim-section">
+        <header>
+          <h2>🌑 日食・月食のしくみ（月の軌道の傾き）</h2>
+          <p>月の公転軌道（白道）は、地球の公転軌道に対して約5度傾いています。そのため、毎月のように日食や月食が起きるわけではありません。</p>
+        </header>
+        <div class="sim-container" id="eclipses-container">
+          
+          <div class="eclipses-layout" style="display: flex; gap: 1rem; width: 100%; flex-wrap: wrap;">
+            <div class="canvas-wrapper" style="flex: 1; min-width: 300px;">
+              <!-- メインの俯瞰ビュー -->
+              <canvas id="eclipses-canvas" width="600" height="400" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></canvas>
+            </div>
+            
+            <div class="earth-view-panel" style="width: 200px; background: var(--surface-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center;">
+              <h3 style="font-size: 14px; margin-bottom: 5px;">🌍 地球からの見え方</h3>
+              <canvas id="eclipse-view-canvas" width="180" height="180" style="background: #000; border-radius: 4px;"></canvas>
+              <p id="eclipse-status" style="font-weight: bold; color: #ffcc00; margin-top: 10px; text-align: center;">日食も月食も起きていない</p>
+            </div>
+          </div>
+          
+          <div class="controls" style="margin-top: 15px;">
+            <div class="control-group" style="margin-top: 10px;">
+              <label for="earth-orbit-slider" style="min-width: 150px;">🌍 地球の公転（季節）:</label>
+              <input type="range" id="earth-orbit-slider" min="0" max="360" step="1" value="0" style="flex: 1;">
+            </div>
+            <div class="control-group" style="margin-top: 10px;">
+              <label for="moon-orbit-slider" style="min-width: 150px;">🌕 月の公転（日にち）:</label>
+              <input type="range" id="moon-orbit-slider" min="0" max="360" step="1" value="180" style="flex: 1;">
+            </div>
+            <div class="control-group" style="margin-top: 15px; justify-content: center;">
+              <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="tilt-toggle" checked style="width: 18px; height: 18px;">
+                月の軌道の傾き（5.1度）を再現する
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. 太陽系の天体比較 -->
+      <section id="sim-solar-system" class="sim-section">
+        <header>
+          <h2>🪐 太陽系の天体比較</h2>
+          <p>太陽系の惑星の大きさや、太陽からの距離を比較してみましょう！</p>
+        </header>
+        <div class="sim-container iframe-container">
+          <iframe src="https://javalab.org/ja/solar_system_ja/" frameborder="0" allowfullscreen></iframe>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="main.js"></script>
+  <script src="custom-sims.js"></script>
+</body>
+</html>
