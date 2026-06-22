@@ -1247,10 +1247,10 @@ if (seasonsCanvas) {
     // Sun comes from LEFT (-X). 
     // Positive tilt means x1 = x0*cos - z0*sin.
     // North pole is z0=R, x0=0.
-    // x1 = -R*sin(tilt).
-    // If tilt is positive, x1 is NEGATIVE (towards Sun -> Summer).
-    if (currentSeason === 'summer') return -23.4 * Math.PI / 180; 
-    if (currentSeason === 'winter') return 23.4 * Math.PI / 180; 
+    // x1 = x0*cos(tilt) - z0*sin(tilt)
+    // If tilt is positive, x1 is NEGATIVE for the North Pole (towards Sun at -X -> Summer).
+    if (currentSeason === 'summer') return 23.4 * Math.PI / 180; 
+    if (currentSeason === 'winter') return -23.4 * Math.PI / 180; 
     return 0; 
   }
   
