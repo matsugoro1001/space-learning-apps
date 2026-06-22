@@ -1067,6 +1067,33 @@ if (seasonsCanvas) {
     drawLatitude(0, 'rgba(255,50,50,0.3)', 2, false);
     drawLatitude(0, 'rgba(255,50,50,0.8)', 2, true);
     
+    // Draw Longitude lines (Meridians) to show Earth's rotation
+    const earthRotation = -(simTime / 12) * Math.PI;
+    const drawLongitude = (lon, color, width, drawFront) => {
+      ctxSeasons.beginPath();
+      let first = true;
+      for (let lat = -Math.PI/2; lat <= Math.PI/2 + 0.01; lat += 0.05) {
+        const p = projectEarth(lat, Math.min(lat, Math.PI/2), tilt); // ensure precision
+        const pTrue = projectEarth(lat, lon, tilt);
+        const isFront = pTrue.depth > -0.1; // small epsilon to connect poles
+        if (isFront === drawFront) {
+          if (first) { ctxSeasons.moveTo(pTrue.x, pTrue.y); first = false; }
+          else ctxSeasons.lineTo(pTrue.x, pTrue.y);
+        } else {
+          first = true;
+        }
+      }
+      ctxSeasons.strokeStyle = color;
+      ctxSeasons.lineWidth = width;
+      ctxSeasons.stroke();
+    };
+
+    for (let i = 0; i < 12; i++) {
+      const rotLon = (i * Math.PI / 6) + earthRotation;
+      drawLongitude(rotLon, 'rgba(255,255,255,0.1)', 1, false); // Back
+      drawLongitude(rotLon, 'rgba(255,255,255,0.3)', 1, true);  // Front
+    }
+    
     // Japan line with Day/Night colors
     drawDayNightLatitude(latJp, tilt, false); // Back
     drawDayNightLatitude(latJp, tilt, true);  // Front
