@@ -1265,12 +1265,51 @@ if (eclipsesCanvas) {
   const viewCanvas = document.getElementById('eclipse-view-canvas');
   const ctxV = viewCanvas.getContext('2d');
   
-  const earthOrbitSlider = document.getElementById('earth-orbit-slider');
-  const moonOrbitSlider = document.getElementById('moon-orbit-slider');
-  const tiltToggle = document.getElementById('tilt-toggle');
+  const stateBtns = document.querySelectorAll('.eclipse-state-btn');
   const statusText = document.getElementById('eclipse-status');
   
   let animIdEclipses = null;
+  
+  // Animation states
+  let currentEarthAngle = 90; // Default to normal new moon season
+  let currentMoonAngle = 180; // New moon
+  let targetEarthAngle = 90;
+  let targetMoonAngle = 180;
+  
+  // Interaction
+  stateBtns.forEach(btn => {
+    btn.addEventListener('click', e => {
+      // visual button feedback
+      stateBtns.forEach(b => b.style.opacity = '0.5');
+      e.currentTarget.style.opacity = '1.0';
+      
+      const state = e.currentTarget.dataset.state;
+      if (state === 'solar') {
+        targetEarthAngle = 0;
+        targetMoonAngle = 180;
+      } else if (state === 'lunar') {
+        targetEarthAngle = 0;
+        targetMoonAngle = 0; // or 360 depending on rotation
+      } else if (state === 'normal-new') {
+        targetEarthAngle = 90;
+        targetMoonAngle = 180;
+      } else if (state === 'normal-full') {
+        targetEarthAngle = 90;
+        targetMoonAngle = 360; // So it rotates forward from 180
+      }
+      
+      // Ensure smooth shortest-path rotation or nice wrap around
+      // We will just let it tween linearly for visual effect
+      if (currentMoonAngle > 400) currentMoonAngle -= 360; // Keep it somewhat bounded
+      if (currentMoonAngle < -40) currentMoonAngle += 360;
+    });
+  });
+  
+  // init button states visually
+  stateBtns.forEach(b => {
+    if (b.dataset.state === 'normal-new') b.style.opacity = '1.0';
+    else b.style.opacity = '0.5';
+  });
   
   const cw = eclipsesCanvas.width;
   const ch = eclipsesCanvas.height;
@@ -1283,9 +1322,13 @@ if (eclipsesCanvas) {
   const tiltAngle = 15 * Math.PI / 180; // Exaggerated 15 degrees
   
   function drawEclipses() {
-    const earthAngle = parseFloat(earthOrbitSlider.value) * Math.PI / 180; 
-    const moonAngle = parseFloat(moonOrbitSlider.value) * Math.PI / 180;
-    const isTilted = tiltToggle.checked;
+    // Lerp angles for smooth animation
+    currentEarthAngle += (targetEarthAngle - currentEarthAngle) * 0.05;
+    currentMoonAngle += (targetMoonAngle - currentMoonAngle) * 0.05;
+    
+    const earthAngle = currentEarthAngle * Math.PI / 180; 
+    const moonAngle = currentMoonAngle * Math.PI / 180;
+    const isTilted = true; // Always tilted for this simulation
     
     ctxE.clearRect(0, 0, cw, ch);
     ctxV.clearRect(0, 0, viewCanvas.width, viewCanvas.height);
@@ -1472,10 +1515,6 @@ if (eclipsesCanvas) {
     drawEclipses();
     animIdEclipses = requestAnimationFrame(animateEclipses);
   }
-  
-  earthOrbitSlider.addEventListener('input', drawEclipses);
-  moonOrbitSlider.addEventListener('input', drawEclipses);
-  tiltToggle.addEventListener('change', drawEclipses);
   
   const observer = new MutationObserver(() => {
     if (document.getElementById('sim-eclipses').classList.contains('active')) {

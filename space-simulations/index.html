@@ -210,22 +210,11 @@
               <p id="eclipse-status" style="font-weight: bold; color: #ffcc00; margin-top: 10px; text-align: center;">日食も月食も起きていない</p>
             </div>
           </div>
-          
-          <div class="controls" style="margin-top: 15px;">
-            <div class="control-group" style="margin-top: 10px;">
-              <label for="earth-orbit-slider" style="min-width: 150px;">🌍 地球の公転（季節）:</label>
-              <input type="range" id="earth-orbit-slider" min="0" max="360" step="1" value="0" style="flex: 1;">
-            </div>
-            <div class="control-group" style="margin-top: 10px;">
-              <label for="moon-orbit-slider" style="min-width: 150px;">🌕 月の公転（日にち）:</label>
-              <input type="range" id="moon-orbit-slider" min="0" max="360" step="1" value="180" style="flex: 1;">
-            </div>
-            <div class="control-group" style="margin-top: 15px; justify-content: center;">
-              <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="tilt-toggle" checked style="width: 18px; height: 18px;">
-                月の軌道の傾き（5.1度）を再現する
-              </label>
-            </div>
+          <div class="controls" style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="eclipse-state-btn btn" data-state="solar" style="background: #ff4444; color: #fff;">🌑 日食<br><small style="font-size: 10px; font-weight: normal;">（太陽・月・地球がピッタリ一直線）</small></button>
+            <button class="eclipse-state-btn btn" data-state="lunar" style="background: #aa3333; color: #fff;">🌕 月食<br><small style="font-size: 10px; font-weight: normal;">（太陽・地球・月がピッタリ一直線）</small></button>
+            <button class="eclipse-state-btn btn" data-state="normal-new" style="background: #444; color: #fff;">🌒 ふつうの新月<br><small style="font-size: 10px; font-weight: normal;">（軌道の傾きで影がズレる）</small></button>
+            <button class="eclipse-state-btn btn" data-state="normal-full" style="background: #666; color: #fff;">🌔 ふつうの満月<br><small style="font-size: 10px; font-weight: normal;">（軌道の傾きで影がズレる）</small></button>
           </div>
         </div>
       </section>
@@ -244,7 +233,7 @@
     </main>
   </div>
 
-  <script src="main.js?v=2"></script>
-  <script src="custom-sims.js?v=2"></script>
+  <script src="main.js?v=3"></script>
+  <script src="custom-sims.js?v=3"></script>
 </body>
 </html>
